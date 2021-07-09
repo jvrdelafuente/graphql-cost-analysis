@@ -426,9 +426,22 @@ export default class CostAnalysis {
               // $FlowFixMe: don't know why Flow thinks it could be undefined
               .getType(childNode.typeCondition.name.value)
           }
-          let fragmentNodeCost = childNode
+
+          let fragmentNodeCost = 0;
+          if (inlineFragmentType && inlineFragmentType.astNode && inlineFragmentType.astNode.directives && inlineFragmentType instanceof _graphql.GraphQLObjectType) {
+            const directiveArgs = this.getArgsFromDirectives(
+              fieldType.astNode.directives,
+              fieldArgs
+            )
+            const typeCost = this.computeCost(directiveArgs)
+            fragmentNodeCost = typeCost + (childNode ? this.computeNodeCost(childNode, inlineFragmentType, this.operationMultipliers) : this.defaultCost);
+          }
+          else{
+            fragmentNodeCost = childNode
             ? this.computeNodeCost(childNode, inlineFragmentType, this.operationMultipliers)
             : this.defaultCost
+          }
+
           fragmentCosts.push(fragmentNodeCost)
           nodeCost = 0
           break
